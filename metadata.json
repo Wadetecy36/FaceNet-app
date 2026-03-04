@@ -1,0 +1,5 @@
+{
+  "name": "FaceNet Biometric System",
+  "description": "A facial recognition system for real-time biometric attendance and security, inspired by FaceNet-Node.",
+  "requestFramePermissions": ["camera"]
+}
