@@ -1,0 +1,2292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SENTINEL // GreenWatch</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ── Reset & Variables ─────────────────────────────────────────────────────── */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #080a0d;
+      --surface: #0d1117;
+      --surface2: #0a0e14;
+      --border: #1a2332;
+      --amber: #ffb300;
+      --amber-dim: #7a5500;
+      --red: #ff3b3b;
+      --orange: #ff7c1e;
+      --green: #00e676;
+      --blue: #29b6f6;
+      --teal: #00bcd4;
+      --yellow: #ffeb3b;
+      --text: #c8d6e5;
+      --muted: #4a5568;
+      --mono: 'Share Tech Mono', monospace;
+      --display: 'Bebas Neue', sans-serif;
+      --body: 'DM Sans', sans-serif;
+      --header-h: 54px;
+      --stats-h: 76px;
+      --tabs-h: 40px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Scanlines */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9000;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.07) 2px, rgba(0, 0, 0, 0.07) 4px);
+    }
+
+    /* ── Scrollbars ────────────────────────────────────────────────────────────── */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--muted);
+    }
+
+    /* ── Header ────────────────────────────────────────────────────────────────── */
+    header {
+      height: var(--header-h);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(90deg, #0d1117, #0a1020);
+      z-index: 100;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .logo-main {
+      font-family: var(--display);
+      font-size: 24px;
+      letter-spacing: 4px;
+      color: var(--amber);
+      text-shadow: 0 0 20px rgba(255, 179, 0, 0.35);
+    }
+
+    .logo-sub {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-shrink: 0;
+    }
+
+    .ws-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .ws-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 7px var(--red);
+    }
+
+    .ws-dot.live {
+      background: var(--green);
+      box-shadow: 0 0 7px var(--green);
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .4
+      }
+    }
+
+    #clock {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--amber);
+      letter-spacing: 2px;
+    }
+
+    /* ── KPI Stats Bar ─────────────────────────────────────────────────────────── */
+    .stats-bar {
+      height: var(--stats-h);
+      flex-shrink: 0;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .kpi {
+      padding: 10px 16px;
+      border-right: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .kpi:last-child {
+      border-right: none;
+    }
+
+    .kpi::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--amber);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .5s;
+    }
+
+    .kpi.pulse::after {
+      transform: scaleX(1);
+      animation: kpi-flash .5s forwards;
+    }
+
+    @keyframes kpi-flash {
+      0% {
+        transform: scaleX(0)
+      }
+
+      50% {
+        transform: scaleX(1)
+      }
+
+      100% {
+        transform: scaleX(0)
+      }
+    }
+
+    .kpi-label {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .kpi-value {
+      font-family: var(--display);
+      font-size: 32px;
+      line-height: 1;
+      color: var(--amber);
+      text-shadow: 0 0 24px rgba(255, 179, 0, .3);
+      transition: color .3s, text-shadow .3s;
+    }
+
+    .kpi-value.red {
+      color: var(--red);
+      text-shadow: 0 0 24px rgba(255, 59, 59, .4);
+    }
+
+    .kpi-value.green {
+      color: var(--green);
+      text-shadow: 0 0 24px rgba(0, 230, 118, .3);
+    }
+
+    .kpi-value.blue {
+      color: var(--blue);
+      text-shadow: 0 0 24px rgba(41, 182, 246, .3);
+    }
+
+    .kpi-value.orange {
+      color: var(--orange);
+      text-shadow: 0 0 24px rgba(255, 124, 30, .4);
+    }
+
+    .kpi-value.teal {
+      color: var(--teal);
+      text-shadow: 0 0 24px rgba(0, 188, 212, .4);
+    }
+
+    .kpi-sub {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+    }
+
+    /* Turbidity KPI extras */
+    .kpi-turb-bar-bg {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 2px 0;
+      overflow: hidden;
+    }
+
+    .kpi-turb-bar {
+      height: 100%;
+      border-radius: 2px;
+      transition: width .6s ease, background .5s;
+    }
+
+    .kpi-turb-row {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .kpi-turb-sig {
+      font-family: var(--mono);
+      font-size: 8px;
+      color: var(--muted);
+      text-transform: capitalize;
+    }
+
+    .kpi-turb-score {
+      font-family: var(--mono);
+      font-size: 8px;
+      color: var(--muted);
+    }
+
+    /* ── Tab Navigation ────────────────────────────────────────────────────────── */
+    .tab-nav {
+      height: var(--tabs-h);
+      flex-shrink: 0;
+      display: flex;
+      align-items: stretch;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-right: 1px solid var(--border);
+      cursor: pointer;
+      transition: color .2s, border-color .2s, background .2s;
+      position: relative;
+    }
+
+    .tab-btn:last-child {
+      border-right: none;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, .02);
+    }
+
+    .tab-btn.active {
+      color: var(--amber);
+      border-bottom-color: var(--amber);
+      background: rgba(255, 179, 0, .04);
+    }
+
+    .tab-btn .tab-icon {
+      font-size: 12px;
+    }
+
+    .tab-badge {
+      font-family: var(--mono);
+      font-size: 8px;
+      padding: 1px 5px;
+      border-radius: 10px;
+      background: rgba(255, 59, 59, .2);
+      color: var(--red);
+      min-width: 18px;
+      text-align: center;
+      display: none;
+    }
+
+    .tab-badge.show {
+      display: inline-block;
+    }
+
+    /* ── Tab Content Area ──────────────────────────────────────────────────────── */
+    .tab-content {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .tab-pane {
+      display: none;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .tab-pane.active {
+      display: flex;
+    }
+
+    /* ── Shared Panel Components ───────────────────────────────────────────────── */
+    .panel {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .panel:last-child {
+      border-right: none;
+    }
+
+    .panel-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .panel-title {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--amber);
+    }
+
+    .panel-badge {
+      font-family: var(--mono);
+      font-size: 9px;
+      padding: 2px 8px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: var(--muted);
+    }
+
+    .scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+    }
+
+    .p-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 2px;
+      padding: 3px 9px;
+      cursor: pointer;
+      text-transform: uppercase;
+      border-radius: 2px;
+      transition: all .2s;
+    }
+
+    .p-btn:hover {
+      border-color: var(--amber);
+      color: var(--amber);
+    }
+
+    /* ── Empty State ───────────────────────────────────────────────────────────── */
+    .empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 10px;
+      color: var(--muted);
+      padding: 20px;
+    }
+
+    .empty-icon {
+      font-size: 28px;
+      opacity: .25;
+    }
+
+    .empty-text {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+   TAB 1 — OVERVIEW  (camera feed + person chart + system log)
+   ═══════════════════════════════════════════════════════════════════ */
+    #tab-overview {
+      flex-direction: row;
+    }
+
+    /* Camera feed — main area */
+    .camera-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .camera-viewport {
+      flex: 1;
+      position: relative;
+      background: #000;
+      overflow: hidden;
+    }
+
+    #live-feed-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      background: #000;
+    }
+
+    .feed-overlay-top {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      background: linear-gradient(180deg, rgba(8, 10, 13, .9) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .feed-overlay-bot {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      background: linear-gradient(0deg, rgba(8, 10, 13, .9) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .feed-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--amber);
+    }
+
+    .feed-fps {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+    }
+
+    .feed-loc {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+    }
+
+    .feed-rec-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 6px var(--red);
+      animation: blink 1.5s infinite;
+    }
+
+    .feed-rec-dot.live {
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    /* Corner brackets */
+    .fc {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      z-index: 11;
+      pointer-events: none;
+    }
+
+    .fc.tl {
+      top: 6px;
+      left: 6px;
+      border-top: 2px solid rgba(255, 179, 0, .35);
+      border-left: 2px solid rgba(255, 179, 0, .35);
+    }
+
+    .fc.tr {
+      top: 6px;
+      right: 6px;
+      border-top: 2px solid rgba(255, 179, 0, .35);
+      border-right: 2px solid rgba(255, 179, 0, .35);
+    }
+
+    .fc.bl {
+      bottom: 6px;
+      left: 6px;
+      border-bottom: 2px solid rgba(255, 179, 0, .35);
+      border-left: 2px solid rgba(255, 179, 0, .35);
+    }
+
+    .fc.br {
+      bottom: 6px;
+      right: 6px;
+      border-bottom: 2px solid rgba(255, 179, 0, .35);
+      border-right: 2px solid rgba(255, 179, 0, .35);
+    }
+
+    .feed-offline {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: #000;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      z-index: 12;
+    }
+
+    /* Chart strip below camera */
+    .chart-strip {
+      height: 68px;
+      flex-shrink: 0;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      padding: 8px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .chart-strip-label {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 3px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 32px;
+    }
+
+    .bar {
+      flex: 1;
+      background: var(--amber-dim);
+      border-radius: 1px 1px 0 0;
+      transition: height .4s ease;
+      min-height: 2px;
+    }
+
+    .bar.peak {
+      background: var(--amber);
+    }
+
+    /* Right column: camera meta + system log */
+    .overview-right {
+      width: 260px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-left: 1px solid var(--border);
+    }
+
+    .cam-meta-block {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .cam-meta-title {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--amber);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .cam-row {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .cam-lbl {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .cam-val {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text);
+    }
+
+    .log-block {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .log-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 12px;
+      font-family: var(--mono);
+      font-size: 9px;
+      line-height: 1.9;
+      background: #060809;
+    }
+
+    .log-line {
+      color: #3a5a38;
+    }
+
+    .log-line.warn {
+      color: var(--orange);
+    }
+
+    .log-line.error {
+      color: var(--red);
+    }
+
+    .log-line.info {
+      color: var(--blue);
+    }
+
+    .log-line.water {
+      color: var(--teal);
+    }
+
+    .log-line::before {
+      content: '> ';
+      color: var(--amber-dim);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+   TAB 2 — EVENTS
+   ═══════════════════════════════════════════════════════════════════ */
+    #tab-events {
+      flex-direction: column;
+    }
+
+    .filter-bar {
+      display: flex;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .filter-btn {
+      flex: 1;
+      padding: 8px 6px;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-align: center;
+      cursor: pointer;
+      color: var(--muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-right: 1px solid var(--border);
+      transition: color .2s, border-color .2s;
+    }
+
+    .filter-btn:last-child {
+      border-right: none;
+    }
+
+    .filter-btn:hover {
+      color: var(--text);
+    }
+
+    .filter-btn.active {
+      color: var(--amber);
+      border-bottom-color: var(--amber);
+    }
+
+    .events-grid {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .event-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--green);
+      padding: 10px 13px;
+      border-radius: 2px;
+      animation: slideIn .25s ease;
+      flex-shrink: 0;
+    }
+
+    .event-card.low {
+      border-left-color: var(--yellow);
+    }
+
+    .event-card.medium {
+      border-left-color: var(--orange);
+    }
+
+    .event-card.high {
+      border-left-color: var(--red);
+      animation: slideIn .25s ease, flashCard .6s ease;
+    }
+
+    .event-card.info {
+      border-left-color: var(--muted);
+    }
+
+    .event-card.water {
+      border-left-color: var(--teal);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-6px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    @keyframes flashCard {
+
+      0%,
+      100% {
+        background: var(--surface)
+      }
+
+      50% {
+        background: rgba(255, 59, 59, .07)
+      }
+    }
+
+    .ev-meta {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 5px;
+      flex-wrap: wrap;
+    }
+
+    .ev-sev {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 1px 6px;
+      border-radius: 1px;
+      flex-shrink: 0;
+    }
+
+    .ev-sev.low {
+      background: rgba(255, 235, 59, .1);
+      color: var(--yellow);
+    }
+
+    .ev-sev.medium {
+      background: rgba(255, 124, 30, .1);
+      color: var(--orange);
+    }
+
+    .ev-sev.high {
+      background: rgba(255, 59, 59, .1);
+      color: var(--red);
+    }
+
+    .ev-sev.info {
+      background: rgba(74, 85, 104, .25);
+      color: var(--muted);
+    }
+
+    .ev-sev.water {
+      background: rgba(0, 188, 212, .1);
+      color: var(--teal);
+    }
+
+    .ev-type {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text);
+      letter-spacing: .5px;
+    }
+
+    .ev-time {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      margin-left: auto;
+    }
+
+    .ev-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .ev-action {
+      margin-top: 5px;
+      font-size: 10px;
+      color: var(--blue);
+      font-style: italic;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+   TAB 3 — DETECTIONS
+   ═══════════════════════════════════════════════════════════════════ */
+    #tab-detections {
+      flex-direction: row;
+    }
+
+    .det-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .det-grid {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .det-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      animation: slideIn .2s ease;
+      flex-shrink: 0;
+    }
+
+    .det-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      background: rgba(255, 179, 0, .06);
+      flex-shrink: 0;
+    }
+
+    .det-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .det-name {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text);
+      text-transform: capitalize;
+    }
+
+    .det-idx {
+      font-family: var(--mono);
+      font-size: 8px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      margin-top: 1px;
+    }
+
+    .det-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .det-pct {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--amber);
+    }
+
+    .det-bar-bg {
+      width: 64px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .det-bar {
+      height: 100%;
+      border-radius: 2px;
+      transition: width .4s;
+    }
+
+    .det-bar.hc {
+      background: var(--green);
+    }
+
+    .det-bar.mc {
+      background: var(--amber);
+    }
+
+    .det-bar.lc {
+      background: var(--red);
+    }
+
+    /* Side summary */
+    .det-side {
+      width: 220px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-left: 1px solid var(--border);
+    }
+
+    .det-summary-block {
+      padding: 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .det-sum-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(26, 35, 50, .6);
+    }
+
+    .det-sum-row:last-child {
+      border-bottom: none;
+    }
+
+    .det-sum-lbl {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .det-sum-val {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--amber);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+   TAB 4 — WATER QUALITY
+   ═══════════════════════════════════════════════════════════════════ */
+    #tab-water {
+      flex-direction: row;
+    }
+
+    .wq-main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Big level card */
+    .wq-hero {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .wq-level-big {
+      font-family: var(--display);
+      font-size: 56px;
+      line-height: 1;
+      transition: color .4s, text-shadow .4s;
+    }
+
+    .wq-level-big.CLEAR {
+      color: var(--green);
+      text-shadow: 0 0 30px rgba(0, 230, 118, .4);
+    }
+
+    .wq-level-big.MODERATE {
+      color: var(--amber);
+      text-shadow: 0 0 30px rgba(255, 179, 0, .4);
+    }
+
+    .wq-level-big.TURBID {
+      color: var(--orange);
+      text-shadow: 0 0 30px rgba(255, 124, 30, .4);
+    }
+
+    .wq-level-big.CRITICAL {
+      color: var(--red);
+      text-shadow: 0 0 30px rgba(255, 59, 59, .5);
+      animation: pulse-red 1.5s infinite;
+    }
+
+    @keyframes pulse-red {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .7
+      }
+    }
+
+    .wq-hero-info {
+      flex: 1;
+    }
+
+    .wq-hero-label {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 3px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .wq-score-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .wq-score-bar-bg {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .wq-score-bar {
+      height: 100%;
+      border-radius: 3px;
+      transition: width .6s ease, background .5s;
+    }
+
+    .wq-score-txt {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      flex-shrink: 0;
+      width: 44px;
+      text-align: right;
+    }
+
+    .wq-sig-txt {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    /* 4 metric cards */
+    .wq-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .wq-metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 12px 14px;
+    }
+
+    .wq-m-label {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .wq-m-val {
+      font-family: var(--display);
+      font-size: 36px;
+      line-height: 1;
+      color: var(--amber);
+      transition: color .3s;
+    }
+
+    .wq-m-sub {
+      font-family: var(--mono);
+      font-size: 8px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* Flags */
+    .wq-flags-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 12px 14px;
+    }
+
+    .wq-flags-title {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 3px;
+      color: var(--teal);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .wq-flags-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .wq-flag {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 1px;
+      padding: 3px 8px;
+      border-radius: 2px;
+      border: 1px solid;
+      text-transform: uppercase;
+    }
+
+    .wq-flag.CLEAR {
+      border-color: rgba(0, 230, 118, .3);
+      color: #00a050;
+      background: rgba(0, 230, 118, .05);
+    }
+
+    .wq-flag.MODERATE {
+      border-color: rgba(255, 179, 0, .35);
+      color: var(--amber-dim);
+      background: rgba(255, 179, 0, .05);
+    }
+
+    .wq-flag.TURBID {
+      border-color: rgba(255, 124, 30, .4);
+      color: var(--orange);
+      background: rgba(255, 124, 30, .06);
+    }
+
+    .wq-flag.CRITICAL {
+      border-color: rgba(255, 59, 59, .5);
+      color: var(--red);
+      background: rgba(255, 59, 59, .08);
+    }
+
+    /* History sparkline */
+    .wq-history-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 12px 14px;
+    }
+
+    .wq-h-title {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 3px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .wq-sparkline {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 42px;
+    }
+
+    .wq-spark {
+      flex: 1;
+      border-radius: 1px 1px 0 0;
+      min-height: 3px;
+      transition: height .4s ease, background .3s;
+    }
+
+    .wq-spark.sp-clear {
+      background: var(--muted);
+    }
+
+    .wq-spark.sp-moderate {
+      background: var(--amber-dim);
+    }
+
+    .wq-spark.sp-turbid {
+      background: var(--orange);
+    }
+
+    .wq-spark.sp-critical {
+      background: var(--red);
+    }
+
+    .wq-spark.sp-latest {
+      opacity: 1;
+      filter: brightness(1.4);
+    }
+
+    /* Right: info panel */
+    .wq-right {
+      width: 200px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-left: 1px solid var(--border);
+    }
+
+    .wq-info-block {
+      padding: 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .wq-info-title {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--amber);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .wq-info-row {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 8px;
+    }
+
+    .wq-info-lbl {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .wq-info-val {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+   TAB 5 — SYSTEM LOG
+   ═══════════════════════════════════════════════════════════════════ */
+    #tab-log {
+      flex-direction: column;
+    }
+
+    .log-full {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 16px;
+      font-family: var(--mono);
+      font-size: 10px;
+      line-height: 1.9;
+      background: var(--bg);
+    }
+
+    .log-full .log-line::before {
+      content: '> ';
+      color: var(--amber-dim);
+    }
+
+    .log-toolbar {
+      height: 38px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .log-toolbar-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 2px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+   GLOBAL OVERLAYS
+   ═══════════════════════════════════════════════════════════════════ */
+    #alert-overlay {
+      position: fixed;
+      inset: 0;
+      border: 3px solid var(--red);
+      pointer-events: none;
+      z-index: 8000;
+      opacity: 0;
+      box-shadow: inset 0 0 60px rgba(255, 59, 59, .2);
+    }
+
+    #alert-overlay.flash {
+      animation: bflash 1s ease;
+    }
+
+    @keyframes bflash {
+
+      0%,
+      100% {
+        opacity: 0
+      }
+
+      20%,
+      60% {
+        opacity: 1
+      }
+    }
+
+    #alert-toast {
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      z-index: 8500;
+      width: 340px;
+      background: var(--surface);
+      border: 1px solid var(--red);
+      border-left: 4px solid var(--red);
+      border-radius: 4px;
+      padding: 14px 16px;
+      box-shadow: 0 0 40px rgba(255, 59, 59, .15), 0 8px 32px rgba(0, 0, 0, .7);
+      display: none;
+      animation: toastIn .3s ease;
+    }
+
+    #alert-toast.show {
+      display: block;
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .toast-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .toast-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--red);
+      flex: 1;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+
+    .toast-badge {
+      font-family: var(--mono);
+      font-size: 8px;
+      background: rgba(255, 59, 59, .15);
+      color: var(--red);
+      padding: 2px 6px;
+      border-radius: 2px;
+      letter-spacing: 3px;
+    }
+
+    .toast-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 4px;
+    }
+
+    .toast-act {
+      font-size: 10px;
+      color: var(--blue);
+      font-style: italic;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="alert-overlay"></div>
+  <div id="alert-toast">
+    <div class="toast-top">
+      <span>&#9888;</span>
+      <span class="toast-title" id="toast-title">HIGH ALERT</span>
+      <span class="toast-badge">HIGH</span>
+    </div>
+    <div class="toast-desc" id="toast-desc"></div>
+    <div class="toast-act" id="toast-act"></div>
+  </div>
+
+  <!-- ── Header ──────────────────────────────────────────────────────────────── -->
+  <header>
+    <div class="logo">
+      <span class="logo-main">SENTINEL</span>
+      <span class="logo-sub">GreenWatch &#47;&#47; Galamsey Detection System</span>
+    </div>
+    <div class="header-right">
+      <div class="ws-pill">
+        <div class="ws-dot" id="ws-dot"></div>
+        <span id="ws-label">CONNECTING</span>
+      </div>
+      <div id="clock">--:--:--</div>
+    </div>
+  </header>
+
+  <!-- ── KPI Stats Bar ───────────────────────────────────────────────────────── -->
+  <div class="stats-bar">
+    <div class="kpi" id="kpi-persons">
+      <div class="kpi-label">Persons</div>
+      <div class="kpi-value" id="kv-persons">&#8212;</div>
+      <div class="kpi-sub" id="ks-persons">Awaiting feed</div>
+    </div>
+    <div class="kpi" id="kpi-unknown">
+      <div class="kpi-label">Unidentified</div>
+      <div class="kpi-value red" id="kv-unknown">&#8212;</div>
+      <div class="kpi-sub">No face match</div>
+    </div>
+    <div class="kpi" id="kpi-anomalies">
+      <div class="kpi-label">Anomalies</div>
+      <div class="kpi-value" id="kv-anomalies">&#8212;</div>
+      <div class="kpi-sub" id="ks-anomalies">Session total</div>
+    </div>
+    <div class="kpi" id="kpi-objects">
+      <div class="kpi-label">YOLO Objects</div>
+      <div class="kpi-value" id="kv-objects">&#8212;</div>
+      <div class="kpi-sub">This frame</div>
+    </div>
+    <div class="kpi" id="kpi-latency">
+      <div class="kpi-label">Inference</div>
+      <div class="kpi-value blue" id="kv-latency">&#8212;</div>
+      <div class="kpi-sub">milliseconds</div>
+    </div>
+    <div class="kpi" id="kpi-water">
+      <div class="kpi-label">Water Quality</div>
+      <div class="kpi-value" id="kv-water" style="font-size:22px;padding-top:4px">&#8212;</div>
+      <div class="kpi-turb-bar-bg">
+        <div class="kpi-turb-bar" id="kpi-turb-bar" style="width:0%;background:var(--muted)"></div>
+      </div>
+      <div class="kpi-turb-row">
+        <span class="kpi-turb-sig" id="kpi-turb-sig">Awaiting feed</span>
+        <span class="kpi-turb-score" id="kpi-turb-score"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tab Navigation ─────────────────────────────────────────────────────── -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('overview', this)">
+      <span class="tab-icon">&#9654;</span> OVERVIEW
+    </button>
+    <button class="tab-btn" onclick="switchTab('events', this)">
+      <span class="tab-icon">&#9883;</span> EVENTS
+      <span class="tab-badge" id="badge-events">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('detections', this)">
+      <span class="tab-icon">&#9632;</span> DETECTIONS
+      <span class="tab-badge" id="badge-dets">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('water', this)">
+      <span class="tab-icon">&#9670;</span> WATER
+      <span class="tab-badge" id="badge-water">&#8212;</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('log', this)">
+      <span class="tab-icon">&#9642;</span> SYSTEM LOG
+    </button>
+  </nav>
+
+  <!-- ── Tab Content ────────────────────────────────────────────────────────── -->
+  <div class="tab-content">
+
+    <!-- TAB 1: OVERVIEW -->
+    <div class="tab-pane active" id="tab-overview">
+
+      <div class="camera-main">
+        <div class="camera-viewport">
+          <div class="fc tl"></div>
+          <div class="fc tr"></div>
+          <div class="fc bl"></div>
+          <div class="fc br"></div>
+          <div class="feed-overlay-top">
+            <span class="feed-label">&#9679; LIVE INFERENCE FEED</span>
+            <span class="feed-rec-dot" id="feed-rec-dot"></span>
+          </div>
+          <img id="live-feed-img" src="http://localhost:8000/stream" alt="Live feed" onerror="onFeedError()"
+            onload="onFeedLoad()" />
+          <div class="feed-offline" id="feed-offline">
+            <span style="font-size:24px;opacity:.2">&#9711;</span>
+            <span>Feed Offline</span>
+            <span style="font-size:9px;color:#2d3748">Start live_capture.py</span>
+          </div>
+          <div class="feed-overlay-bot">
+            <span class="feed-loc" id="feed-loc">&#9472;</span>
+            <span class="feed-fps" id="feed-fps">&#9472;</span>
+          </div>
+        </div>
+
+        <div class="chart-strip">
+          <div class="chart-strip-label">Person Count &#8212; Last 28 Frames</div>
+          <div class="bars" id="person-chart"></div>
+        </div>
+      </div>
+
+      <div class="overview-right">
+        <div class="panel-hdr" style="flex-shrink:0">
+          <span class="panel-title">&#9672; Camera Info</span>
+        </div>
+        <div class="cam-meta-block">
+          <div class="cam-row"><span class="cam-lbl">Device</span> <span class="cam-val" id="cam-device">&#9472;</span>
+          </div>
+          <div class="cam-row"><span class="cam-lbl">Session</span> <span class="cam-val"
+              id="cam-session">&#9472;</span></div>
+          <div class="cam-row"><span class="cam-lbl">Location</span><span class="cam-val"
+              id="cam-location">&#9472;</span></div>
+          <div class="cam-row"><span class="cam-lbl">Last Frame</span><span class="cam-val"
+              id="cam-frame">&#9472;</span></div>
+          <div class="cam-row"><span class="cam-lbl">Avg Persons</span><span class="cam-val" id="cam-avg">&#9472;</span>
+          </div>
+        </div>
+
+        <div class="log-block">
+          <div class="panel-hdr" style="flex-shrink:0">
+            <span class="panel-title">&#9642; System Log</span>
+            <button class="p-btn" onclick="clearLog()">CLEAR</button>
+          </div>
+          <div class="log-body" id="log-body"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: EVENTS -->
+    <div class="tab-pane" id="tab-events">
+      <div style="display:flex;flex-direction:column;height:100%;width:100%;overflow:hidden;">
+        <div class="panel-hdr" style="flex-shrink:0">
+          <span class="panel-title">&#9883; Event Feed</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="panel-badge" id="event-count">0 events</span>
+            <button class="p-btn" onclick="clearEvents()">CLEAR</button>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <button class="filter-btn active" onclick="setFilter('all',   this)">ALL</button>
+          <button class="filter-btn" onclick="setFilter('high',  this)">HIGH</button>
+          <button class="filter-btn" onclick="setFilter('medium',this)">MED</button>
+          <button class="filter-btn" onclick="setFilter('low',   this)">LOW</button>
+          <button class="filter-btn" onclick="setFilter('water', this)">WATER</button>
+          <button class="filter-btn" onclick="setFilter('info',  this)">INFO</button>
+        </div>
+        <div class="events-grid" id="event-feed">
+          <div class="empty">
+            <div class="empty-icon">&#9675;</div>
+            <div class="empty-text">Awaiting inference data</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: DETECTIONS -->
+    <div class="tab-pane" id="tab-detections">
+
+      <div class="det-main">
+        <div class="panel-hdr">
+          <span class="panel-title">&#9632; YOLO Detections</span>
+          <span class="panel-badge" id="det-count">0 objects</span>
+        </div>
+        <div class="det-grid" id="det-grid">
+          <div class="empty">
+            <div class="empty-icon">&#9671;</div>
+            <div class="empty-text">No detections this frame</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="det-side">
+        <div class="panel-hdr">
+          <span class="panel-title">&#9632; Summary</span>
+        </div>
+        <div class="det-summary-block">
+          <div class="det-sum-row"><span class="det-sum-lbl">Total Objects</span> <span class="det-sum-val"
+              id="ds-total">&#8212;</span></div>
+          <div class="det-sum-row"><span class="det-sum-lbl">Unique Classes</span> <span class="det-sum-val"
+              id="ds-classes">&#8212;</span></div>
+          <div class="det-sum-row"><span class="det-sum-lbl">Avg Confidence</span> <span class="det-sum-val"
+              id="ds-avg-conf">&#8212;</span></div>
+          <div class="det-sum-row"><span class="det-sum-lbl">Peak Confidence</span> <span class="det-sum-val"
+              id="ds-peak-conf">&#8212;</span></div>
+          <div class="det-sum-row"><span class="det-sum-lbl">Persons</span> <span class="det-sum-val"
+              id="ds-persons">&#8212;</span></div>
+          <div class="det-sum-row"><span class="det-sum-lbl">Heavy Equipment</span> <span class="det-sum-val"
+              id="ds-heavy">&#8212;</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: WATER QUALITY -->
+    <div class="tab-pane" id="tab-water">
+
+      <div class="wq-main">
+
+        <!-- Hero: level + score bar -->
+        <div class="wq-hero">
+          <div class="wq-level-big CLEAR" id="wq-level-big">CLEAR</div>
+          <div class="wq-hero-info">
+            <div class="wq-hero-label">Turbidity Score</div>
+            <div class="wq-score-row">
+              <div class="wq-score-bar-bg">
+                <div class="wq-score-bar" id="wq-score-bar" style="width:0%;background:var(--muted)"></div>
+              </div>
+              <span class="wq-score-txt" id="wq-score-txt">&#8212;</span>
+            </div>
+            <div class="wq-sig-txt" id="wq-sig-txt">Awaiting first frame...</div>
+          </div>
+        </div>
+
+        <!-- 4 metric cards -->
+        <div class="wq-metrics-grid">
+          <div class="wq-metric-card">
+            <div class="wq-m-label">&#9621; Sediment</div>
+            <div class="wq-m-val" id="wqm-brown">&#8212;</div>
+            <div class="wq-m-sub">Brown / orange runoff</div>
+          </div>
+          <div class="wq-metric-card">
+            <div class="wq-m-label">&#9675; Mercury</div>
+            <div class="wq-m-val" id="wqm-mercury">&#8212;</div>
+            <div class="wq-m-sub">Milky / grey indicator</div>
+          </div>
+          <div class="wq-metric-card">
+            <div class="wq-m-label">&#9670; Algae</div>
+            <div class="wq-m-val" id="wqm-algae">&#8212;</div>
+            <div class="wq-m-sub">Green bloom</div>
+          </div>
+          <div class="wq-metric-card">
+            <div class="wq-m-label">&#9680; Dark Pool</div>
+            <div class="wq-m-val" id="wqm-dark">&#8212;</div>
+            <div class="wq-m-sub">Stagnant pit water</div>
+          </div>
+        </div>
+
+        <!-- Flags -->
+        <div class="wq-flags-block">
+          <div class="wq-flags-title">&#9672; Threat Flags</div>
+          <div class="wq-flags-wrap" id="wq-flags">
+            <span class="wq-flag CLEAR">AWAITING DATA</span>
+          </div>
+        </div>
+
+        <!-- Score history -->
+        <div class="wq-history-block">
+          <div class="wq-h-title">Score History &#8212; Last 32 Frames</div>
+          <div class="wq-sparkline" id="wq-sparkline"></div>
+        </div>
+
+      </div>
+
+      <div class="wq-right">
+        <div class="panel-hdr"><span class="panel-title">&#9672; Details</span></div>
+        <div class="wq-info-block">
+          <div class="wq-info-row"><span class="wq-info-lbl">Brightness</span> <span class="wq-info-val"
+              id="wqi-bright">&#8212;</span></div>
+          <div class="wq-info-row"><span class="wq-info-lbl">Uniformity</span> <span class="wq-info-val"
+              id="wqi-uniform">&#8212;</span></div>
+          <div class="wq-info-row"><span class="wq-info-lbl">Dom. Hue</span> <span class="wq-info-val"
+              id="wqi-hue">&#8212;</span></div>
+          <div class="wq-info-row"><span class="wq-info-lbl">Pixels Analysed</span><span class="wq-info-val"
+              id="wqi-px">&#8212;</span></div>
+          <div class="wq-info-row"><span class="wq-info-lbl">Signature</span> <span class="wq-info-val"
+              id="wqi-sig">&#8212;</span></div>
+          <div class="wq-info-row"><span class="wq-info-lbl">Session Alerts</span><span class="wq-info-val"
+              id="wqi-alerts">0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: SYSTEM LOG -->
+    <div class="tab-pane" id="tab-log">
+      <div style="display:flex;flex-direction:column;height:100%;width:100%;overflow:hidden;">
+        <div class="log-toolbar">
+          <span class="log-toolbar-label" id="log-count">0 entries</span>
+          <button class="p-btn" style="margin-left:auto" onclick="clearLog()">CLEAR LOG</button>
+        </div>
+        <div class="log-full" id="log-full"></div>
+      </div>
+    </div>
+
+  </div><!-- /.tab-content -->
+
+  <script>
+    // ── Config ────────────────────────────────────────────────────────────────────
+    const WS_URL = 'ws://localhost:8000/ws';
+    const MAX_EVT = 150;
+    const CHART_LEN = 28;
+    const WQ_HIST = 32;
+
+    // ── State ─────────────────────────────────────────────────────────────────────
+    let events = [];
+    let personChart = new Array(CHART_LEN).fill(0);
+    let wqHistory = new Array(WQ_HIST).fill(0);
+    let totalAnomalies = 0;
+    let waterAlerts = 0;
+    let activeFilter = 'all';
+    let ws = null;
+    let wsRetry = 2000;
+    let toastTimer = null;
+    let logEntries = 0;
+
+    // Feed state
+    let feedOK = false;
+    let fpsCounter = 0;
+    let fpsLastT = Date.now();
+
+    // ── Clock ─────────────────────────────────────────────────────────────────────
+    setInterval(() => {
+      document.getElementById('clock').textContent =
+        new Date().toLocaleTimeString('en-GB', { hour12: false });
+    }, 1000);
+
+    // ── Tab switching ─────────────────────────────────────────────────────────────
+    function switchTab(name, btn) {
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    // ── WebSocket ─────────────────────────────────────────────────────────────────
+    function connectWS() {
+      logLine('Connecting to ' + WS_URL, 'info');
+      ws = new WebSocket(WS_URL);
+
+      ws.onopen = () => {
+        wsRetry = 2000;
+        document.getElementById('ws-dot').classList.add('live');
+        document.getElementById('ws-label').textContent = 'LIVE';
+        logLine('WebSocket connected — live push active', 'info');
+      };
+
+      ws.onmessage = e => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.type === 'inference_result') processRecord(msg.payload);
+        } catch (err) { logLine('WS parse error: ' + err.message, 'warn'); }
+      };
+
+      ws.onclose = () => {
+        document.getElementById('ws-dot').classList.remove('live');
+        document.getElementById('ws-label').textContent = 'RECONNECTING';
+        logLine('WebSocket closed — retrying in ' + (wsRetry / 1000).toFixed(0) + 's', 'warn');
+        setTimeout(connectWS, wsRetry);
+        wsRetry = Math.min(wsRetry * 1.5, 15000);
+      };
+
+      ws.onerror = () => logLine('WebSocket error', 'error');
+    }
+
+    // ── Process record ────────────────────────────────────────────────────────────
+    const HEAVY = new Set(['excavator', 'truck', 'mining truck', 'dredger', 'bus']);
+
+    function processRecord(rec) {
+      const persons = rec.person_count ?? 0;
+      const unknown = rec.unknown_count ?? 0;
+      const known = rec.known_count ?? 0;
+      const ms = rec.processing_ms ?? 0;
+      const dets = rec.detections ?? [];
+      const anoms = rec.anomalies ?? [];
+      const isoTime = rec.iso_time || new Date().toISOString();
+      const timeStr = new Date(isoTime).toLocaleTimeString('en-GB', { hour12: false });
+
+      // ── KPIs ──────────────────────────────────────────────────────────────────
+      setKV('kv-persons', persons, persons > 5 ? 'red' : '');
+      setKV('kv-unknown', unknown, unknown > 0 ? 'red' : '');
+      setKV('kv-objects', dets.length, '');
+      setKV('kv-latency', Math.round(ms) + '', ms > 1200 ? 'red' : ms > 600 ? 'orange' : 'blue');
+
+      flashKPI('kpi-persons');
+
+      // ── Person chart ──────────────────────────────────────────────────────────
+      personChart.push(persons);
+      if (personChart.length > CHART_LEN) personChart.shift();
+      renderPersonChart();
+
+      // ── Camera meta ───────────────────────────────────────────────────────────
+      document.getElementById('cam-device').textContent = rec.device_id || '—';
+      document.getElementById('cam-session').textContent = rec.session_id ? rec.session_id.slice(0, 10) : '—';
+      document.getElementById('cam-location').textContent = rec.location || '—';
+      document.getElementById('cam-frame').textContent = timeStr;
+      document.getElementById('feed-loc').textContent = rec.location || '—';
+
+      const avg = (personChart.reduce((a, b) => a + b, 0) / personChart.length).toFixed(1);
+      document.getElementById('cam-avg').textContent = avg;
+
+      // ── Detections ────────────────────────────────────────────────────────────
+      renderDetections(dets);
+
+      // ── Anomalies ─────────────────────────────────────────────────────────────
+      const waterAnoms = anoms.filter(a => a.type && a.type.startsWith('water_quality'));
+      const secAnoms = anoms.filter(a => !a.type || !a.type.startsWith('water_quality'));
+
+      totalAnomalies += secAnoms.length;
+      setKV('kv-anomalies', totalAnomalies, totalAnomalies > 0 ? 'red' : '');
+      document.getElementById('ks-anomalies').textContent = totalAnomalies > 0
+        ? 'Last: ' + (secAnoms[secAnoms.length - 1]?.severity?.toUpperCase() || '?')
+        : 'Session total';
+
+      const badge = document.getElementById('badge-events');
+      badge.textContent = events.length;
+      badge.classList.toggle('show', events.length > 0);
+
+      for (const a of secAnoms) {
+        pushEvent({
+          severity: a.severity, type: a.type.replace(/_/g, ' ').toUpperCase(),
+          desc: a.description, action: a.recommended_action, time: timeStr
+        });
+        if (a.severity === 'high') triggerAlert(a);
+      }
+      for (const a of waterAnoms) {
+        pushEvent({
+          severity: 'water', type: a.type.replace(/_/g, ' ').toUpperCase(),
+          desc: a.description, action: a.recommended_action, time: timeStr
+        });
+        if (a.severity === 'high') { triggerAlert(a); waterAlerts++; }
+      }
+      if (anoms.length === 0 && persons > 0) {
+        pushEvent({
+          severity: 'info', type: 'FRAME PROCESSED',
+          desc: persons + ' person(s). ' + known + ' identified, ' + unknown + ' unidentified.',
+          action: null, time: timeStr
+        });
+      }
+
+      // ── Turbidity ─────────────────────────────────────────────────────────────
+      if (rec.turbidity) renderTurbidity(rec.turbidity);
+
+      // ── Log ───────────────────────────────────────────────────────────────────
+      logLine(rec.log_entry || 'Frame processed — ' + persons + ' persons');
+      if (rec.turbidity && rec.turbidity.level !== 'CLEAR') {
+        logLine('Water: ' + rec.turbidity.level + ' score=' + rec.turbidity.score + '/100', 'water');
+      }
+    }
+
+    // ── KPI helpers ───────────────────────────────────────────────────────────────
+    function setKV(id, val, cls) {
+      const el = document.getElementById(id);
+      el.textContent = val;
+      el.className = 'kpi-value' + (cls ? ' ' + cls : '');
+    }
+    function flashKPI(id) {
+      const el = document.getElementById(id);
+      el.classList.remove('pulse');
+      void el.offsetWidth;
+      el.classList.add('pulse');
+    }
+
+    // ── Person chart ──────────────────────────────────────────────────────────────
+    function renderPersonChart() {
+      const c = document.getElementById('person-chart');
+      const max = Math.max(...personChart, 1);
+      c.innerHTML = personChart.map(v => {
+        const pct = Math.max(4, (v / max) * 100);
+        const cls = v === max ? 'peak' : '';
+        return '<div class="bar ' + cls + '" style="height:' + pct + '%" title="' + v + '"></div>';
+      }).join('');
+    }
+
+    // ── Detections ────────────────────────────────────────────────────────────────
+    const ICONS = {
+      person: '👤', excavator: '🏗', truck: '🚚', car: '🚗', bus: '🚌',
+      motorcycle: '🏍', bicycle: '🚲', 'mining truck': '🚛', dredger: '⚓',
+      default: '⬡'
+    };
+    const HEAVY_SET = new Set(['excavator', 'truck', 'mining truck', 'dredger']);
+
+    function renderDetections(dets) {
+      const grid = document.getElementById('det-grid');
+      document.getElementById('det-count').textContent = dets.length + ' objects';
+
+      // Update badge
+      const b = document.getElementById('badge-dets');
+      b.textContent = dets.length;
+      b.classList.toggle('show', dets.length > 0);
+
+      // Summary
+      const pCount = dets.filter(d => d.label === 'person').length;
+      const hCount = dets.filter(d => HEAVY_SET.has(d.label.toLowerCase())).length;
+      const classes = [...new Set(dets.map(d => d.label))].length;
+      const avgConf = dets.length ? (dets.reduce((a, d) => a + d.confidence, 0) / dets.length * 100).toFixed(0) + '%' : '—';
+      const peakConf = dets.length ? (Math.max(...dets.map(d => d.confidence)) * 100).toFixed(0) + '%' : '—';
+
+      document.getElementById('ds-total').textContent = dets.length || '—';
+      document.getElementById('ds-classes').textContent = classes || '—';
+      document.getElementById('ds-avg-conf').textContent = avgConf;
+      document.getElementById('ds-peak-conf').textContent = peakConf;
+      document.getElementById('ds-persons').textContent = pCount || '—';
+      document.getElementById('ds-heavy').textContent = hCount || '—';
+
+      if (!dets.length) {
+        grid.innerHTML = '<div class="empty"><div class="empty-icon">&#9671;</div><div class="empty-text">No detections this frame</div></div>';
+        return;
+      }
+
+      grid.innerHTML = dets.map((d, i) => {
+        const pct = Math.round(d.confidence * 100);
+        const barCls = pct >= 70 ? 'hc' : pct >= 50 ? 'mc' : 'lc';
+        const icon = ICONS[d.label.toLowerCase()] || ICONS.default;
+        return '<div class="det-card">' +
+          '<div class="det-icon">' + icon + '</div>' +
+          '<div class="det-info">' +
+          '<div class="det-name">' + d.label + '</div>' +
+          '<div class="det-idx">OBJECT #' + (i + 1).toString().padStart(2, '0') + '</div>' +
+          '</div>' +
+          '<div class="det-right">' +
+          '<div class="det-pct">' + pct + '%</div>' +
+          '<div class="det-bar-bg"><div class="det-bar ' + barCls + '" style="width:' + pct + '%"></div></div>' +
+          '</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    // ── Turbidity ─────────────────────────────────────────────────────────────────
+    const TURB_COLORS = { CLEAR: '#00e676', MODERATE: '#ffb300', TURBID: '#ff7c1e', CRITICAL: '#ff3b3b' };
+    const TURB_KPI = { CLEAR: 'green', MODERATE: '', TURBID: 'orange', CRITICAL: 'red' };
+    const SIG_LABELS = {
+      sediment: 'Sediment runoff', mercury: 'Mercury indicator',
+      algae: 'Algae bloom', dark_pool: 'Dark pool', clear: 'No contamination'
+    };
+
+    function renderTurbidity(t) {
+      const level = t.level || 'CLEAR';
+      const score = t.score ?? 0;
+      const sig = t.color_signature || 'clear';
+      const flags = t.threat_flags || [];
+      const m = t.metrics || {};
+      const col = TURB_COLORS[level] || '#4a5568';
+      const lvllo = level.toLowerCase();
+
+      // KPI bar
+      setKV('kv-water', level, TURB_KPI[level] || '');
+      document.getElementById('kpi-turb-bar').style.width = score + '%';
+      document.getElementById('kpi-turb-bar').style.background = col;
+      document.getElementById('kpi-turb-sig').textContent = SIG_LABELS[sig] || sig;
+      document.getElementById('kpi-turb-score').textContent = score + '/100';
+
+      // Water tab badge
+      const wb = document.getElementById('badge-water');
+      wb.textContent = level;
+      wb.classList.toggle('show', level !== 'CLEAR');
+      if (level !== 'CLEAR') {
+        wb.style.background = col + '33';
+        wb.style.color = col;
+      }
+
+      // Hero
+      const hero = document.getElementById('wq-level-big');
+      hero.textContent = level;
+      hero.className = 'wq-level-big ' + level;
+
+      document.getElementById('wq-score-bar').style.width = score + '%';
+      document.getElementById('wq-score-bar').style.background = col;
+      document.getElementById('wq-score-txt').textContent = score + '/100';
+      document.getElementById('wq-sig-txt').textContent = SIG_LABELS[sig] || sig;
+
+      // Metric cards
+      const fmt = v => v != null ? v.toFixed(1) + '%' : '—';
+      const colorPct = (v, high, mid) =>
+        (v || 0) > high ? 'var(--red)' : (v || 0) > mid ? 'var(--orange)' : 'var(--amber)';
+
+      const bEl = document.getElementById('wqm-brown');
+      bEl.textContent = fmt(m.brown_pct);
+      bEl.style.color = colorPct(m.brown_pct, 20, 8);
+
+      const mEl = document.getElementById('wqm-mercury');
+      mEl.textContent = fmt(m.mercury_pct);
+      mEl.style.color = colorPct(m.mercury_pct, 15, 5);
+
+      const aEl = document.getElementById('wqm-algae');
+      aEl.textContent = fmt(m.algae_pct);
+      aEl.style.color = (m.algae_pct || 0) > 15 ? 'var(--green)' : 'var(--amber)';
+
+      const dEl = document.getElementById('wqm-dark');
+      dEl.textContent = fmt(m.dark_pct);
+      dEl.style.color = colorPct(m.dark_pct, 30, 15);
+
+      // Detail panel
+      document.getElementById('wqi-bright').textContent = m.mean_brightness != null ? Math.round(m.mean_brightness) + ' / 255' : '—';
+      document.getElementById('wqi-uniform').textContent = m.uniformity != null ? (m.uniformity * 100).toFixed(1) + '%' : '—';
+      document.getElementById('wqi-hue').textContent = m.dominant_hue != null ? m.dominant_hue.toFixed(1) + '°' : '—';
+      document.getElementById('wqi-px').textContent = m.pixel_count != null ? m.pixel_count.toLocaleString() : '—';
+      document.getElementById('wqi-sig').textContent = sig;
+      document.getElementById('wqi-alerts').textContent = waterAlerts;
+
+      // Flags
+      const fEl = document.getElementById('wq-flags');
+      fEl.innerHTML = !flags.length
+        ? '<span class="wq-flag CLEAR">NOMINAL</span>'
+        : flags.map(f => '<span class="wq-flag ' + level + '">' + f.replace(/_/g, ' ') + '</span>').join('');
+
+      // History sparkline
+      wqHistory.push(score);
+      if (wqHistory.length > WQ_HIST) wqHistory.shift();
+      const maxS = Math.max(...wqHistory, 1);
+      document.getElementById('wq-sparkline').innerHTML = wqHistory.map((v, i) => {
+        const h = Math.max(4, Math.round((v / maxS) * 100));
+        const lvl = v >= 71 ? 'critical' : v >= 46 ? 'turbid' : v >= 21 ? 'moderate' : 'clear';
+        const latest = i === wqHistory.length - 1 ? ' sp-latest' : '';
+        return '<div class="wq-spark sp-' + lvl + latest + '" style="height:' + h + '%"></div>';
+      }).join('');
+    }
+
+    // ── Events ────────────────────────────────────────────────────────────────────
+    function pushEvent(ev) {
+      events.unshift(ev);
+      if (events.length > MAX_EVT) events.pop();
+      renderFeed();
+      document.getElementById('event-count').textContent = events.length + ' events';
+      const b = document.getElementById('badge-events');
+      b.textContent = events.length;
+      b.classList.add('show');
+    }
+
+    function renderFeed() {
+      const feed = document.getElementById('event-feed');
+      const filtered = activeFilter === 'all'
+        ? events : events.filter(e => e.severity === activeFilter);
+
+      if (!filtered.length) {
+        feed.innerHTML = '<div class="empty"><div class="empty-icon">&#9675;</div><div class="empty-text">' +
+          (activeFilter === 'all' ? 'Awaiting inference data' : 'No ' + activeFilter + ' events') +
+          '</div></div>';
+        return;
+      }
+
+      feed.innerHTML = filtered.slice(0, 80).map(ev =>
+        '<div class="event-card ' + ev.severity + '">' +
+        '<div class="ev-meta">' +
+        '<span class="ev-sev ' + ev.severity + '">' + ev.severity.toUpperCase() + '</span>' +
+        '<span class="ev-type">' + ev.type + '</span>' +
+        '<span class="ev-time">' + ev.time + '</span>' +
+        '</div>' +
+        '<div class="ev-desc">' + ev.desc + '</div>' +
+        (ev.action ? '<div class="ev-action">&#8594; ' + ev.action + '</div>' : '') +
+        '</div>'
+      ).join('');
+    }
+
+    function setFilter(f, el) {
+      activeFilter = f;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      renderFeed();
+    }
+
+    function clearEvents() {
+      events = []; totalAnomalies = 0;
+      document.getElementById('event-count').textContent = '0 events';
+      document.getElementById('badge-events').classList.remove('show');
+      renderFeed();
+    }
+
+    // ── System log ────────────────────────────────────────────────────────────────
+    function logLine(msg, type) {
+      type = type || 'log';
+      logEntries++;
+      document.getElementById('log-count').textContent = logEntries + ' entries';
+
+      const t = new Date().toLocaleTimeString('en-GB', { hour12: false });
+      const html = '<div class="log-line ' + type + '">[' + t + '] ' + msg + '</div>';
+
+      // Both log displays
+      ['log-body', 'log-full'].forEach(id => {
+        const el = document.getElementById(id);
+        el.insertAdjacentHTML('beforeend', html);
+        el.scrollTop = el.scrollHeight;
+        while (el.children.length > 300) el.removeChild(el.firstChild);
+      });
+    }
+
+    function clearLog() {
+      ['log-body', 'log-full'].forEach(id => {
+        document.getElementById(id).innerHTML = '';
+      });
+      logEntries = 0;
+      document.getElementById('log-count').textContent = '0 entries';
+    }
+
+    // ── Alert ─────────────────────────────────────────────────────────────────────
+    function triggerAlert(a) {
+      const ov = document.getElementById('alert-overlay');
+      ov.classList.remove('flash');
+      void ov.offsetWidth;
+      ov.classList.add('flash');
+
+      document.getElementById('toast-title').textContent = a.type.replace(/_/g, ' ').toUpperCase();
+      document.getElementById('toast-desc').textContent = a.description || '';
+      document.getElementById('toast-act').textContent = a.recommended_action ? '→ ' + a.recommended_action : '';
+
+      const toast = document.getElementById('alert-toast');
+      toast.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 7000);
+      logLine('HIGH SEVERITY ANOMALY: ' + a.type, 'error');
+    }
+
+    // ── Camera feed ───────────────────────────────────────────────────────────────
+    function onFeedLoad() {
+      feedOK = true;
+      document.getElementById('feed-rec-dot').classList.add('live');
+      document.getElementById('feed-offline').style.display = 'none';
+      fpsCounter++;
+      const now = Date.now();
+      if (now - fpsLastT >= 2000) {
+        document.getElementById('feed-fps').textContent = (fpsCounter / ((now - fpsLastT) / 1000)).toFixed(1) + ' fps';
+        fpsCounter = 0; fpsLastT = now;
+      }
+    }
+
+    function onFeedError() {
+      feedOK = false;
+      document.getElementById('feed-rec-dot').classList.remove('live');
+      document.getElementById('feed-offline').style.display = 'flex';
+      setTimeout(() => {
+        document.getElementById('live-feed-img').src = 'http://localhost:8000/stream?' + Date.now();
+      }, 3000);
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────────
+    function init() {
+      renderPersonChart();
+      // Init water sparkline
+      document.getElementById('wq-sparkline').innerHTML =
+        new Array(WQ_HIST).fill('<div class="wq-spark sp-clear" style="height:4%"></div>').join('');
+      connectWS();
+      logLine('SENTINEL // GreenWatch initialised', 'info');
+    }
+
+    init();
+  </script>
+</body>
+
+</html>

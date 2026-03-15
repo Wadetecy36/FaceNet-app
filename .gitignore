@@ -1,0 +1,13 @@
+__pycache__/
+node_modules/
+.env
+*.pt
+*.db
+*.log
+*.zip
+*.ndjson
+galamsey_dataset/
+galamsey_runs/
+*.jpg
+*.png
+*.mp4
